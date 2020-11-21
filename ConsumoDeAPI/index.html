@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja de Games</title>
+</head>
+<body>
+    <h3>Lista de Games</h3>
+    <button onclick="atualizarDados()">Atualizar Dados</button>
+    <hr>
+    <ul id="games"></ul>
+    <hr>
+    <h4>Cadastrar Game</h4>
+    <input type="text" name="nome" id="nome" placeholder="Título"><br>
+    <input type="number" name="ano" id="ano" placeholder="Ano"><br>
+    <input type="number" name="preco" id="preco" placeholder="Preço"><br>
+    <button onclick="cadastrarGame();">Cadastrar</button>
+    <hr>
+    <h4>Editar Game</h4>
+    <input type="number" name="idEdit" id="idEdit" placeholder="ID" readonly><br>
+    <input type="text" name="nomeEdit" id="nomeEdit" placeholder="Título"><br>
+    <input type="number" name="anoEdit" id="anoEdit" placeholder="Ano"><br>
+    <input type="number" name="precoEdit" id="precoEdit" placeholder="Preço"><br>
+    <button onclick="atualizarGame();">Atualizar</button>
+</body>
+
+<!-- Biblioteca Axios
+    *Para consumir dados via HTTP 
+-->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const URL = 'http://localhost:8080';
+
+    function atualizarDados(){
+        document.location.reload(true);
+    }
+
+    function cadastrarGame(){
+        var nome = document.getElementById('nome');
+        var ano = document.getElementById('ano');
+        var preco = document.getElementById('preco');
+
+        var game = {
+            nome: nome.value,
+            ano: ano.value,
+            preco: preco.value
+        }
+
+        axios.post(`${URL}/game`, game).then(response => {
+            
+            if(response.status == 200){
+                alert('Game cadastrado!');
+                atualizarDados();
+            }
+        }).catch(error => {
+            console.log(error);
+        });
+
+    }
+
+    function deletarGame(item){
+        var id = item.getAttribute('data-id');
+        axios.delete(`${URL}/game/${id}`).then(response => {
+            alert('Game deletado!');
+            atualizarDados();
+        }).catch(error => {
+            console.log(error);
+        });
+
+    }
+
+    function carregarGame(item){
+        var id = document.getElementById('idEdit');
+        var nome = document.getElementById('nomeEdit');
+        var ano = document.getElementById('anoEdit');
+        var preco = document.getElementById('precoEdit');
+
+        id.value = item.getAttribute('data-id');
+        nome.value = item.getAttribute('data-nome');
+        ano.value = item.getAttribute('data-ano');
+        preco.value = item.getAttribute('data-preco');
+    }
+
+    function atualizarGame(){
+        var id = document.getElementById('idEdit').value;
+        var nome = document.getElementById('nomeEdit').value;
+        var ano = document.getElementById('anoEdit').value;
+        var preco = document.getElementById('precoEdit').value;
+
+        var game = {
+            nome: nome,
+            ano: ano,
+            preco: preco
+        }
+
+        axios.put(`${URL}/game/${id}`, game).then(response => {
+            alert('Game atualizado');
+            atualizarDados();
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+
+    axios.get(`${URL}/games`).then(response => {
+        var games = response.data;
+        var list = document.getElementById('games');
+
+        games.forEach(game => {
+            var li = document.createElement('li');
+            li.innerHTML = `${game.id} - ${game.nome} = $${game.preco}`;
+            li.setAttribute('data-id', game.id);
+            li.setAttribute('data-nome', game.nome);
+            li.setAttribute('data-preco', game.preco);
+            li.setAttribute('data-ano', game.ano);
+
+            //Botao deletar
+            var button = document.createElement('button');
+            button.innerHTML = "Deletar";
+            button.addEventListener('click', function(){
+                deletarGame(li);
+            });
+
+            //Botao editar
+            var buttonEdit = document.createElement('button');
+            buttonEdit.innerHTML = 'Editar';
+            buttonEdit.addEventListener('click', function(){
+                carregarGame(li);
+            });
+            
+            li.append(button);
+            li.append(buttonEdit);
+            list.append(li);
+        });
+    }).catch(error => {
+        console.log(error);
+    });
+</script>
+</html>
